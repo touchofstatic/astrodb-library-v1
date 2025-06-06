@@ -1,0 +1,21 @@
+---
+import { db, eq, Book, Author } from "astro:db";
+import BookLayout from "../../layouts/BookLayout.astro";
+
+export async function getStaticPaths() {
+    const books = await db
+        .select()
+        .from(Book)
+        .innerJoin(Author, eq(Book.authorId, Author.id));
+
+    return books.map((book) => ({
+        params: { id: book.Book.id },
+        props: { book },
+    }));
+}
+
+const { id } = Astro.params;
+const { book } = Astro.props;
+---
+
+<BookLayout frontmatter={book} />

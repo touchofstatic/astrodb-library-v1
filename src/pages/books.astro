@@ -1,0 +1,114 @@
+---
+import { db, eq, like, Author, Book } from "astro:db";
+import GlobalLayout from "../layouts/GlobalLayout.astro";
+import SearchBar from "../components/SearchBar.astro";
+
+export const prerender = false;
+
+const search = Astro.url.searchParams.get("q");
+const column = Astro.url.searchParams.get("column");
+
+let rows = [];
+if (search == null) {
+    rows = await db
+        .select()
+        .from(Book)
+        .innerJoin(Author, eq(Book.authorId, Author.id));
+} else {
+    switch (column) {
+        case "title":
+            rows = await db
+                .select()
+                .from(Book)
+                .where(like(Book.title, `%${search}%`))
+                .innerJoin(Author, eq(Book.authorId, Author.id));
+            break;
+
+        case "author":
+            rows = await db
+                .select()
+                .from(Author)
+                .where(like(Author.name, `%${search}%`))
+                .innerJoin(Book, eq(Book.authorId, Author.id));
+            break;
+    }
+}
+---
+
+<GlobalLayout>
+    <SearchBar />
+
+    <table>
+        <thead>
+            <tr>
+                <th>Author</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            {
+                rows.map(({ Book, Author }) => (
+                    <tr>
+                        <td>
+                            <a
+                                href={
+                                    `/books?` +
+                                    `${new URLSearchParams({
+                                        // q: Author.name.toLowerCase(),
+                                        q: Author.name,
+                                        column: "author",
+                                    })}`
+                                }
+                            >
+                                {Author.name}
+                            </a>
+                        </td>
+                        <td>
+                            <a href={`/books/${Book.id}`}>{Book.title}</a>
+                            <div class="isbn">ISBN: {Book.isbn}</div>
+                        </td>
+                    </tr>
+                ))
+            }
+            <tr>
+                <td>test 1</td>
+                <td>test 2</td>
+            </tr>
+        </tbody>
+    </table>
+</GlobalLayout>
+
+<style>
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    table,
+    th,
+    td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    th {
+        background-color: lightgray;
+        text-align: left;
+    }
+
+    thead th:nth-child(1) {
+        width: 15%;
+    }
+
+    /* thead th:nth-child(2) {
+    } */
+
+    tr:nth-child(even) {
+        background-color: #dedede;
+    }
+
+    .isbn {
+        color: green;
+        font-size: small;
+    }
+</style>

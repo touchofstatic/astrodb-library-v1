@@ -1,0 +1,134 @@
+---
+import { db, like, eq, Author, Book } from "astro:db";
+import { sql } from "drizzle-orm";
+import GlobalLayout from "../layouts/GlobalLayout.astro";
+import { notFound } from "astro:i18n";
+import Id from "./authors/[id].astro";
+const pageTitle = "Upload book";
+
+export const prerender = false;
+
+const errors = { title: "", name: "", isbn: "" };
+let authorMessage,
+    statusMessage = "";
+
+if (Astro.request.method === "POST") {
+    try {
+        const data = await Astro.request.formData();
+        const title = data.get("title");
+        const name = data.get("name");
+        const isbn = data.get("isbn");
+
+        // server side validation
+        if (typeof title !== "string" || title.length < 1) {
+            errors.title += "ERROR: invalid title.";
+        }
+        // TEMPORARY
+        if (typeof name !== "string" || name.length < 1) {
+            errors.name += "ERROR: invalid author name.";
+        }
+        // how to validate isbn?
+        const hasErrors = Object.values(errors).some((msg) => msg);
+
+        if (!hasErrors) {
+            // 1) if input author name
+            // RIGHT NOW EVERYTHING ONLY WORKS ASSUMING ANY BOOK HAS AN AUTHOR
+            let authorId;
+            // 2) author check
+            let exists = [];
+            // find author name
+            exists = await db
+                .select()
+                .from(Author)
+                .where(eq(Author.name, `${name}`).append(sql` COLLATE NOCASE`));
+
+            // - if author found get id
+            if (exists.length !== 0) {
+                authorId = exists.map((a) => a.id)[0];
+            }
+            // - if author not found create and get id with message
+            else {
+                const insertedAuthor = await db
+                    .insert(Author)
+                    .values({ name })
+                    .returning({ insertedId: Author.id });
+                authorId = insertedAuthor.map((a) => a.insertedId)[0];
+                authorMessage =
+                    "Author with this name not found! Added new author.";
+            }
+            // 3) insert input title, author id, isbn to book entry
+            await db.insert(Book).values({ title, authorId, isbn });
+
+            // 4) success message
+            statusMessage = "Book added successfully.";
+            // 4.1) with link to book?
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(error.message);
+        }
+    }
+}
+---
+
+<GlobalLayout pageTitle={pageTitle}>
+    <p>
+        Note: Authors with the same name share the same id.<br />
+        <small
+            >The site owner isn't a real librarian. It can't be helped. Sorry.</small
+        >
+    </p>
+
+    <!-- client side validation attributes -->
+    <form method="POST" autocomplete="off">
+        <!-- <span> -->
+        <label for="title"> Title: </label>
+        <input
+            type="text"
+            name="title"
+            id="title"
+            required
+            minlength="1"
+            maxlength="100"
+        />
+        <!-- </span> -->
+
+        <!-- <span> -->
+        <label for="name"> Author: </label>
+        <input
+            type="text"
+            name="name"
+            id="name"
+            minlength="1"
+            maxlength="100"
+        />
+        <!-- </span> -->
+
+        <!-- <span> -->
+        <label for="isbn"> ISBN: </label>
+        <input type="text" name="isbn" id="isbn" />
+        <!-- </span> -->
+
+        <button>Upload</button>
+    </form>
+
+    <p>
+        <div class="authorMessage">{authorMessage}</div>
+        <div class="statusMessage">{statusMessage}</div>
+    </p>
+</GlobalLayout>
+
+<style>
+    form {
+        display: grid;
+    }
+
+    input {
+        width: 30%;
+    }
+
+    button {
+        margin-top: 10px;
+        width: 30%;
+    }
+</style>

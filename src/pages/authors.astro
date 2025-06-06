@@ -1,0 +1,27 @@
+---
+import { db, Author, Book } from "astro:db";
+import GlobalLayout from "../layouts/GlobalLayout.astro";
+
+const authors = await db.select().from(Author);
+---
+
+<GlobalLayout>
+    <p class="author-warning">
+        This page is for managing author records. <br />
+        Not to accessed by users.
+    </p>
+
+    <ul>
+        {
+            authors.map(({ id, name }) => (
+                <li>
+                    <a href={`/authors/${id}`}>{name}</a>
+                </li>
+            ))
+        }
+    </ul>
+</GlobalLayout>
+
+<style>
+
+</style>

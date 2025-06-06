@@ -1,0 +1,11 @@
+body {
+    background-color: rgb(219, 219, 199);
+}
+
+a:visited {
+    color: blue;
+}
+
+.author-warning {
+    color: firebrick;
+}

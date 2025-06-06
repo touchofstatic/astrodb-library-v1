@@ -1,0 +1,39 @@
+---
+import { db, like, Book, Author } from "astro:db";
+import GlobalLayout from "../../layouts/GlobalLayout.astro";
+
+export async function getStaticPaths() {
+    const authors = await db.select().from(Author);
+
+    return authors.map((author) => ({
+        params: { id: author.id },
+        props: { author },
+    }));
+}
+
+const { id } = Astro.params;
+const { author } = Astro.props;
+
+const books = await db.select().from(Book).where(like(Book.authorId, id));
+---
+
+<GlobalLayout>
+    <p class="author-warning">
+        This page is for managing author records. <br />
+        Not to accessed by users.
+    </p>
+
+    <p>Author: {author.name}</p>
+
+    <ul>
+        {
+            books.map(({ id, title }) => (
+                <li>
+                    <a href={`/books/${id}`}>{title}</a>
+                </li>
+            ))
+        }
+    </ul>
+</GlobalLayout>
+
+<style></style>

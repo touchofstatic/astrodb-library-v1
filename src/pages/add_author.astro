@@ -1,0 +1,78 @@
+---
+import { db, like, eq, Author } from "astro:db";
+import { sql } from "drizzle-orm";
+import GlobalLayout from "../layouts/GlobalLayout.astro";
+import Authors from "./authors.astro";
+
+export const prerender = false;
+
+const errors = { name: "" };
+let message = "";
+
+if (Astro.request.method === "POST") {
+    try {
+        const data = await Astro.request.formData();
+        const name = data.get("name");
+
+        if (typeof name !== "string") {
+            errors.name += "ERROR: invalid author name.";
+        }
+        const hasErrors = Object.values(errors).some((msg) => msg);
+
+        if (!hasErrors) {
+            let exists = [];
+            exists = await db
+                .select()
+                .from(Author)
+                // case insensitive
+                .where(eq(Author.name, `${name}`).append(sql` COLLATE NOCASE`));
+
+            if (exists.length !== 0) {
+                message = "Author with this name already exists.";
+            } else {
+                await db.insert(Author).values({ name });
+                message = "Author added successfully.";
+            }
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(error.message);
+        }
+    }
+}
+---
+
+<GlobalLayout>
+    <p class="author-warning">
+        This page is for managing author records. <br />
+        Not to accessed by users.
+    </p>
+
+    <p>
+        Note: Authors with the same name share the same id.<br />
+        <small
+            >The site owner isn't a real librarian. It can't be helped.
+            Sorry.</small
+        >
+    </p>
+
+    <article>
+        <form method="POST" autocomplete="off">
+            <!-- client side validation attributes -->
+            <label> Author: </label>
+            <input
+                type="text"
+                name="name"
+                required
+                minlength="1"
+                maxlength="100"
+            />
+
+            <button>Submit</button>
+        </form>
+
+        <p id="message">{message}</p>
+    </article>
+</GlobalLayout>
+
+<style></style>

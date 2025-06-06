@@ -1,0 +1,120 @@
+---
+import "../styles/global.css";
+import GlobalLayout from "./GlobalLayout.astro";
+const { frontmatter } = Astro.props;
+
+import { Image } from "astro:assets";
+import coverPlaceholder from "../assets/book-placeholder.png";
+---
+
+<GlobalLayout>
+    <article>
+        <Image src={coverPlaceholder} alt="cover placeholder" />
+
+        <table>
+            <tbody>
+                <tr>
+                    <td>Title:</td>
+                    <td><strong>{frontmatter.Book.title}</strong></td>
+                </tr>
+
+                <tr>
+                    <td>Author:</td>
+                    <td>
+                        <a href={`/authors/${frontmatter.Author.id}`}>
+                            {frontmatter.Author.name}
+                        </a>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>ISBN:</td>
+                    <td>{frontmatter.Book.isbn}</td>
+                </tr>
+
+                <tr>
+                    <td>ID:</td>
+                    <td>{frontmatter.Book.id}</td>
+                </tr>
+
+                <tr>
+                    <td>Time added:</td>
+                    <td
+                        >{
+                            frontmatter.Book.timeAdded
+                                .toISOString()
+                                .replace("T", " ")
+                                .substring(0, 19)
+                        }</td
+                    >
+                </tr>
+
+                <tr> <td>Description: </td></tr>
+                <tr>
+                    <td colspan="2" class="description">
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing
+                        elit. Aenean commodo ligula eget dolor. Aenean massa.
+                        Cum sociis natoque penatibus et magnis dis parturient
+                        montes, nascetur ridiculus mus. Donec quam felis,
+                        ultricies nec, pellentesque eu, pretium quis, sem. Nulla
+                        consequat massa quis enim. Donec pede justo, fringilla
+                        vel, aliquet nec, vulputate eget, arcu. In enim justo,
+                        rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam
+                        dictum felis eu pede mollis pretium. Integer tincidunt.
+                        Cras dapibus. Vivamus elementum semper nisi. Aenean
+                        vulputate eleifend tellus. Aenean leo ligula, porttitor
+                        eu, consequat vitae, eleifend ac, enim. Aliquam lorem
+                        ante, dapibus in, viverra quis, feugiat a, tellus.
+                        Phasellus viverra nulla ut metus varius laoreet. Quisque
+                        rutrum. Aenean imperdiet. Etiam ultricies nisi vel
+                        augue. Curabitur ullamcorper ultricies nisi. Nam eget
+                        dui. Etiam rhoncus. Maecenas tempus, tellus eget
+                        condimentum rhoncus, sem quam semper libero, sit amet
+                        adipiscing sem neque sed ipsum. Nam quam nunc, blandit
+                        vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec
+                        odio et ante tincidunt tempus. Donec vitae sapien ut
+                        libero venenatis faucibus. Nullam quis ante. Etiam sit
+                        amet orci eget eros faucibus tincidunt. Duis leo. Sed
+                        fringilla mauris sit amet nibh. Donec sodales sagittis
+                        magna. Sed consequat, leo eget bibendum sodales, augue
+                        velit cursus nunc,
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </article>
+</GlobalLayout>
+
+<style>
+    article {
+        display: inline-grid;
+        grid-template-columns: auto auto;
+        gap: 10px;
+    }
+
+    img {
+        height: auto;
+        width: 200px;
+        border: 1px black solid;
+    }
+
+    strong {
+        font-size: larger;
+    }
+
+    td:nth-child(1) {
+        color: gray;
+        /* width appropriate for column names;*/
+        /* doesn't extend and column content stays close */
+        width: 100px;
+
+        border: 1px red dotted;
+    }
+
+    td.description {
+        /* otherwise gray because it's td 1st child because it's a row */
+        color: black;
+        /* width based on table rather than other td 1st child */
+        width: inherit;
+    }
+</style>
